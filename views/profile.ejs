@@ -1,0 +1,145 @@
+
+<html>
+  <head>
+    <title>Busker</title>
+    <script src="index.js"></script>
+    <script src="Busker.js"></script>
+    <link href="Busker.css" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="https://www.svgrepo.com/show/389702/bold.svg" />
+    <link href="events.ejs" />
+    <link href="about.ejs" />
+    <link href="createEvent.ejs" />
+    <link href="event.ejs" />
+  </head>
+
+  <body>
+    <header>
+      <a href="/" style="text-decoration:none;"><img class="logo" src="https://www.svgrepo.com/show/389702/bold.svg" alt="logo"></a>
+      <nav>
+        <ul class="navLinks">
+          <li><a class="pageLink" href="/">Home</a></li>
+          <li><a class="pageLink" href="/events">Events</a></li>
+          <li><a id="profileLink" href="/profile">Profile</a></li>
+          <li><a class="pageLink" href="/about">About</a></li>
+        </ul>
+      </nav>
+    </header>
+    <h2 style="text-align: center">Hi <%= firstName %>! You're looking great today.</h2>
+
+    <div class="profilePicDiv">
+      <form action="profile" method="post" enctype="multipart/form-data">
+        <img class="profilePic" src="<%= 'data:image/png;base64,' + profilePic || 'https://t4.ftcdn.net/jpg/02/15/84/43/360_F_215844325_ttX9YiIIyeaR7Ne6EaLLjMAmy4GvPC69.jpg' %>" id="photo" />
+        <input type="file" id="file" name="file" />
+        <input type="hidden" id="base64String" name="base64String" value="<%= profilePic || '' %>" />
+        <label for="file" id="uploadButton">Upload File</label>
+      </form>
+    </div>
+
+    <div class="followersDiv">
+  <h2>Followers:</h2>
+  <ul>
+    <% for (let follower of followers) { %>
+    <li>
+      <% if (follower._id.toString() === foundUser._id.toString()) { %>
+        <%= follower.username %> (You)
+      <% } else { %>
+        <a href="/profile/<%= follower._id %>"><%= follower.username %></a>
+      <% } %>
+        <button ><%= foundUser.followers.includes(follower._id) ? 'Unfollow' : 'Follow' %></button>
+    </li>
+    <% } %>
+  </ul>
+</div>
+
+    <div class="friendsDiv">
+      <div class="section">
+        <h2>Friends:</h2>
+      <ul>
+        <% for (let friend of friends) { %>
+        <li>
+          <%= friend.username %>
+        </li>
+        <% } %>
+      </ul>
+      </div>
+    </div>
+
+    <div class="profileEventsDiv">
+      <div class="section">
+        <h2 style="text-align: center;">Your Events:</h2>
+      <div class="profileEventsWrapper">
+        <% events.forEach(function(event) { %>
+        <div class="profileEventsRow">
+           <a href="/events/<%= event.id %>">
+            <p class="eventTitle"><%= event.eventTitle %></p>
+            <p class="eventDate"><%= 'Date: ' + event.date %></p>
+            <p class="eventLocation"><%= 'Location: ' + event.eventLocation %></p>
+          </a>
+          
+    <button>Delete</button>
+        </div>
+        <% }); %>
+      </div>
+      </div>
+    </div>
+  
+    <div class="profileExtraButtons">
+      <a class="createEvent cta" href="/createEvent">Create an event</a>
+      <a class="logout cta" href="/logout">Logout</a>
+    </div>
+  </body>
+</html>
+
+<script>
+
+  const imageDiv = document.querySelector('.profilePicDiv');
+      const image = document.querySelector('#photo');
+      const file = document.querySelector('#file');
+      const uploadButton = document.querySelector('#uploadButton');
+
+      imageDiv.addEventListener('mouseenter', function () {
+        uploadButton.style.display = 'block';
+      });
+
+      imageDiv.addEventListener('mouseleave', function () {
+        uploadButton.style.display = 'none';
+      });
+
+      // turn profilePic inputted into base64 string
+
+      file.addEventListener('change', imageUploaded);
+
+      let base64String = "";
+
+      function imageUploaded() {
+        const fileChosen = file.files[0];
+
+        if (fileChosen) {
+          const reader = new FileReader();
+
+          reader.addEventListener('load', function () {
+            base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
+            const xhr = new XMLHttpRequest();
+            xhr.open("post", '/profile/upload');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+              if (xhr.status === 200) {
+                console.log('Image uploaded successfully');
+                reader.removeEventListener('load', imageUploaded);
+                image.src = reader.result
+              } else {
+                console.log('Error uploading image');
+              }
+            };
+            xhr.send(JSON.stringify({ base64String }));
+          });
+
+          reader.readAsDataURL(fileChosen);
+        }
+      }
+
+      function displayString() {
+        console.log("Base64String about to be printed");
+        alert(base64String);
+      }
+</script>

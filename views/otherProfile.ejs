@@ -1,0 +1,132 @@
+<html>
+  <head>
+     <title>Busker</title>
+    <script src="/index.js"></script>
+    <script src="/Busker.js"></script>
+    <link href="/Busker.css" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="https://www.svgrepo.com/show/389702/bold.svg" />
+  </head>
+
+  <body>
+    <header>
+      <a href="/" style="text-decoration:none;"><img class="logo" src="https://www.svgrepo.com/show/389702/bold.svg" alt="logo"></a>
+      <nav>
+        <ul class="navLinks">
+          <li><a class="pageLink" href="/">Home</a></li>
+          <li><a class="pageLink" href="/events">Events</a></li>
+          <li><a class="pageLink" href="/profile">Profile</a></li>
+          <li><a class="pageLink" href="/about">About</a></li>
+          <li><a class="button pageLink" href="#contact"><button>Contact</button></a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <h2>Other user's Profile</h2>
+
+    <p>Username: <%= user.username %></p>
+
+    <div id="followButtonContainer">
+      <form action="/users/<%= user._id %>/follow" method="POST">
+        <input type="hidden" name="currentUser" value="<%= currentUser._id %>">
+        <button id="followButton" type="submit"><%= currentUser.following.includes(user._id) ? 'Unfollow' : 'Follow' %></button>
+      </form>
+    </div>
+
+    <div class="followersDiv">
+      <h2>Followers:</h2>
+      <ul>
+        <% for (let follower of followers) { %>
+        <li>
+          <%= follower.username %>
+        </li>
+        <% } %>
+      </ul>
+    </div>
+
+    <div class="friends">
+      <h2>Friends:</h2>
+      <ul>
+        <% for (let friend of friends) { %>
+        <li>
+          <%= friend %>
+        </li>
+        <% } %>
+      </ul>
+    </div>
+
+    <div class="eventsDiv">
+      <h2 style="text-align: center;">Their Events:</h2>
+      <div class="eventsWrapper">
+        <% events.forEach(function(event) { %>
+        <div class="eventsRow">
+           <a href="/events/<%= event.id %>">
+            <p class="eventTitle"><%= event.eventTitle %></p>
+            <p class="eventDescription"><%= event.description %></p>
+            <p class="eventTime"><%= 'Time: ' + event.time %></p>
+            <p class="eventDate"><%= 'Date: ' + event.date %></p>
+            <p class="eventCapacity"><%= 'Capacity: ' + event.capacity %></p>
+            <p class="eventLocation"><%= 'Location: ' + event.eventLocation %></p>
+          </a>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+
+
+    <script>
+    </script>
+  </body>
+</html>
+
+<script>
+  const followButton = document.getElementById('followButton');
+  const userId = '<%= user._id %>'; 
+
+  followButton.addEventListener('click', () => {
+    toggleFollow(userId);
+  });
+
+  function toggleFollow(userId) {
+    if (followButton.textContent === 'Follow') { 
+      fetch(`/users/${userId}/follow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Update the button text to "Unfollow"
+            followButton.textContent = 'Unfollow';
+          } else {
+            // Handle the error or display a message
+            console.error('Failed to follow:', data.error);
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    } else { // Unfollow functionality
+      fetch(`/users/${userId}/follow`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Update the button text to "Follow"
+            followButton.textContent = 'Follow';
+          } else {
+            // Handle the error or display a message
+            console.error('Failed to unfollow:', data.error);
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+    }
+  }
+</script>
